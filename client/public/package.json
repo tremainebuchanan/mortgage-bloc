@@ -12,6 +12,10 @@
     "angular": "^1.6.6",
     "angular-messages": "^1.6.6",
     "angular-route": "^1.6.6",
-    "bulma": "^0.6.0"
+    "bootstrap": "^3.3.7",
+    "bulma": "^0.6.0",
+    "bulma-extensions": "^0.2.0",
+    "font-awesome": "^4.7.0",
+    "shortid": "^2.2.8"
   }
 }
