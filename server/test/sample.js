@@ -51,61 +51,157 @@ describe('Commodity Trading', () => {
             });
     });
 
-    describe('#tradeCommodity', () => {
+    describe('#SalesAgreementTansaction', () => {
 
-        it('should be able to trade a commodity', () => {
+        it('should be able to change status to STAMPED', () => {
             const factory = businessNetworkConnection.getBusinessNetwork().getFactory();
 
-            // create the traders
-            const dan = factory.newResource(NS, 'Trader', 'dan@email.com');
-            dan.firstName = 'Dan';
-            dan.lastName = 'Selman';
+            const buyer = factory.newResource(NS, 'Person', '7343');
+            buyer.firstName = 'Mary';
+            buyer.lastName = 'Jane';
+            buyer.type = 'BUYER';
 
-            const simon = factory.newResource(NS, 'Trader', 'simon@email.com');
-            simon.firstName = 'Simon';
-            simon.lastName = 'Stone';
+            const seller = factory.newResource(NS, 'Person', '2314');
+            seller.firstName = 'Jim';
+            seller.lastName = 'Brown';
+            seller.type = 'SELLER';
 
-            // create the commodity
-            const commodity = factory.newResource(NS, 'Commodity', 'EMA');
-            commodity.description = 'Corn';
-            commodity.mainExchange = 'Euronext';
-            commodity.quantity = 100;
-            commodity.owner = factory.newRelationship(NS, 'Trader', dan.$identifier);
+
+            const salesAgreement = factory.newResource(NS, 'SalesAgreement', '8678');
+            salesAgreement.conditions = 'Good';
+            salesAgreement.cost = 5000000.0;
+            salesAgreement.status = 'SIGNED';
+            salesAgreement.buyer = factory.newRelationship(NS, 'Person', buyer.$identifier);
+            salesAgreement.seller = factory.newRelationship(NS, 'Person', seller.$identifier);
 
             // create the trade transaction
-            const trade = factory.newTransaction(NS, 'Trade');
-            trade.newOwner = factory.newRelationship(NS, 'Trader', simon.$identifier);
-            trade.commodity = factory.newRelationship(NS, 'Commodity', commodity.$identifier);
-
-            // the owner should of the commodity should be dan
-            commodity.owner.$identifier.should.equal(dan.$identifier);
+            const salesAgreementTansaction = factory.newTransaction(NS, 'SalesAgreementTansaction');
+            salesAgreementTansaction.salesAgreement = factory.newRelationship(NS, 'SalesAgreement', salesAgreement.$identifier);
+            salesAgreementTansaction.status = 'STAMPED';
 
             // Get the asset registry.
-            let commodityRegistry;
-            return businessNetworkConnection.getAssetRegistry(NS + '.Commodity')
+            let salesAgreementRegistry;
+            return businessNetworkConnection.getAssetRegistry(NS + '.SalesAgreement')
                 .then((assetRegistry) => {
-                    commodityRegistry = assetRegistry;
+                    salesAgreementRegistry = assetRegistry;
                     // add the commodity to the asset registry.
-                    return commodityRegistry.add(commodity);
+                    return salesAgreementRegistry.add(salesAgreement);
                 })
                 .then(() => {
-                    return businessNetworkConnection.getParticipantRegistry(NS + '.Trader');
+                    return businessNetworkConnection.getParticipantRegistry(NS + '.Person');
                 })
                 .then((participantRegistry) => {
                     // add the traders
-                    return participantRegistry.addAll([dan, simon]);
+                    return participantRegistry.addAll([buyer, seller]);
                 })
                 .then(() => {
                     // submit the transaction
-                    return businessNetworkConnection.submitTransaction(trade);
+                    return businessNetworkConnection.submitTransaction(salesAgreementTansaction);
                 })
                 .then(() => {
                     // re-get the commodity
-                    return commodityRegistry.get(commodity.$identifier);
+                    return salesAgreementRegistry.get(salesAgreement.$identifier);
                 })
-                .then((newCommodity) => {
+                .then((newSalesAgreement) => {
                     // the owner of the commodity should now be simon
-                    newCommodity.owner.$identifier.should.equal(simon.$identifier);
+                    newSalesAgreement.status.should.equal('STAMPED');
+                });
+        });
+    });
+
+    describe('#ChangeOfOwnership', () => {
+        it('should be able to change ownership', () => {
+            const factory = businessNetworkConnection.getBusinessNetwork().getFactory();
+
+            const buyer = factory.newResource(NS, 'Person', '6757');
+            buyer.firstName = 'Mary';
+            buyer.lastName = 'Jane';
+            buyer.type = 'BUYER';
+
+            const owner = factory.newResource(NS, 'Person', '6467');
+            owner.firstName = 'Jim';
+            owner.lastName = 'Brown';
+            owner.type = 'SELLER';
+
+            const surveyor = factory.newResource(NS, 'Entity', '7687');
+            surveyor.name = 'Tom\'s Surveyors' ;
+            surveyor.type = 'SURVEYOR';
+
+            const valuator = factory.newResource(NS, 'Entity', '5747');
+            valuator.name = 'Stamford & Sons';
+            valuator.type = 'VALUATOR';
+
+            const valuationReport = factory.newResource(NS, 'ValuationReport', '8580');
+            valuationReport.value = 5000000;
+            valuationReport.condition = 'Good';
+            valuationReport.valuator = factory.newRelationship(NS, 'Entity', valuator.$identifier);
+
+            const surveyorReport = factory.newResource(NS, 'SurveyorReport', '8476');
+            surveyorReport.size = 1500;
+            surveyorReport.location = 'Kingston';
+            surveyorReport.surveyor = factory.newRelationship(NS, 'Entity', surveyor.$identifier);
+
+            const certificateOfTitle = factory.newResource(NS, 'CertificateOfTitle', '3133');
+            certificateOfTitle.volumne = '1290';
+            certificateOfTitle.folio = '12';
+            certificateOfTitle.leinAmount = 0;
+            certificateOfTitle.mortgageProvider = '';
+            certificateOfTitle.owner = factory.newRelationship(NS, 'Person', owner.$identifier);
+            certificateOfTitle.valuationReport = factory.newRelationship(NS, 'ValuationReport', valuationReport.$identifier);
+            certificateOfTitle.surveyorReport = factory.newRelationship(NS, 'SurveyorReport', surveyorReport.$identifier);
+
+            // create the trade transaction
+            const changeOfOwnership = factory.newTransaction(NS, 'ChangeOfOwnership');
+            changeOfOwnership.certificateOfTitle = factory.newRelationship(NS, 'CertificateOfTitle', certificateOfTitle.$identifier);
+            changeOfOwnership.buyer = factory.newRelationship(NS, 'Person', buyer.$identifier);
+
+            // Get the asset registry.
+            let certificateOfTitleRegistry;
+            return businessNetworkConnection.getAssetRegistry(NS + '.CertificateOfTitle')
+                .then((assetRegistry) => {
+                    certificateOfTitleRegistry = assetRegistry;
+                    // add the commodity to the asset registry.
+                    return certificateOfTitleRegistry.add(certificateOfTitle);
+                })
+                .then(() => {
+                    return businessNetworkConnection.getParticipantRegistry(NS + '.Person');
+                })
+                .then((participantRegistry) => {
+                    // add the traders
+                    return participantRegistry.addAll([buyer, owner]);
+                })
+                .then(() => {
+                    return businessNetworkConnection.getParticipantRegistry(NS + '.Entity');
+                })
+                .then((entityRegistry) => {
+                    // add the traders
+                    return entityRegistry.addAll([surveyor, valuator]);
+                })
+                .then(() => {
+                    return businessNetworkConnection.getAssetRegistry(NS + '.ValuationReport');
+                })
+                .then((valuationReportRegistry) => {
+                    // add the traders
+                    return valuationReportRegistry.add(valuationReport);
+                })
+                .then(() => {
+                    return businessNetworkConnection.getAssetRegistry(NS + '.SurveyorReport');
+                })
+                .then((surveyorReportRegistry) => {
+                    // add the traders
+                    return surveyorReportRegistry.add(surveyorReport);
+                })
+                .then(() => {
+                    // submit the transaction
+                    return businessNetworkConnection.submitTransaction(changeOfOwnership);
+                })
+                .then(() => {
+                    // re-get the commodity
+                    return certificateOfTitleRegistry.get(certificateOfTitle.$identifier);
+                })
+                .then((newCertificateOfTitle) => {
+                    // the owner of the commodity should now be simon
+                    newCertificateOfTitle.owner.$identifier.should.equal(buyer.$identifier);
                 });
         });
     });
