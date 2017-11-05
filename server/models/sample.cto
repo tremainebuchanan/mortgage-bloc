@@ -1,18 +1,77 @@
 namespace org.acme.mortgagebloc
 
-asset Commodity identified by tradingSymbol {
-    o String tradingSymbol
-    o String description
-    o String mainExchange
-    o Double quantity
-    --> Trader owner
+enum PeopleType {
+    o BUYER
+    o SELLER
 }
-participant Trader identified by tradeId {
-    o String tradeId
+enum EntityType {
+    o BANK
+    o SURVEYOR
+    o VALUATOR
+    o NLA
+    o TAJ
+}
+enum SalesAgreementStatus {
+    o SIGNED
+    o STAMPED
+}
+participant Entity identified by trn {
+    o String trn
+    o String name
+    o EntityType type
+}
+participant Person identified by trn {
+    o String trn
     o String firstName
     o String lastName
+    o PeopleType type
 }
-transaction Trade {
-    --> Commodity commodity
-    --> Trader newOwner
+asset SalesAgreement identified by salesAgreementId {
+    o String salesAgreementId
+    o String conditions
+    o Double cost
+    o SalesAgreementStatus status
+    --> Person buyer
+    --> Person seller
+}
+asset Mortgage identified by mortgageId {
+    o String mortgageId
+    --> Person buyer
+    --> Entity bank
+}
+asset InstrumentOfTransfer identified by instrumentOfTransferId {
+    o String instrumentOfTransferId
+    o String volumne
+    o String folio
+    --> Person buyer
+}
+asset CertificateOfTitle identified by certificateOfTitleId {
+    o String certificateOfTitleId
+    o String volumne
+    o String folio
+    o Double leinAmount
+    o String mortgageProvider
+    --> Person owner
+    --> ValuationReport valuationReport
+    --> SurveyorReport surveyorReport
+}
+asset ValuationReport identified by valuationReportId {
+    o String valuationReportId
+    o Double value
+    o String condition
+    --> Entity valuator
+}
+asset SurveyorReport identified by surveyorReportId {
+    o String surveyorReportId
+    o String location
+    o Double size
+    --> Entity surveyor
+}
+transaction SalesAgreementTansaction {
+    --> SalesAgreement salesAgreement
+    o SalesAgreementStatus status
+}
+transaction ChangeOfOwnership {
+    --> CertificateOfTitle certificateOfTitle
+    --> Person buyer
 }

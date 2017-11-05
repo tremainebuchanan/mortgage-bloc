@@ -13,14 +13,27 @@
  */
 
 /**
- * Track the trade of a commodity from one trader to another
- * @param {org.acme.mortgagebloc.Trade} trade - the trade to be processed
+ * Track the status of a sales agreement
+ * @param {org.acme.mortgagebloc.SalesAgreementTansaction} salesAgreementTansaction
  * @transaction
  */
-function tradeCommodity(trade) {
-    trade.commodity.owner = trade.newOwner;
-    return getAssetRegistry('org.acme.mortgagebloc.Commodity')
+function changeSalesAgreementStatus(salesAgreementTansaction) {
+    salesAgreementTansaction.salesAgreement.status = salesAgreementTansaction.status;
+    return getAssetRegistry('org.acme.mortgagebloc.SalesAgreement')
         .then(function (assetRegistry) {
-            return assetRegistry.update(trade.commodity);
+            return assetRegistry.update(salesAgreementTansaction.salesAgreement);
+        });
+}
+
+/**
+ * Track the transfer of a title from seller to buyer
+ * @param {org.acme.mortgagebloc.ChangeOfOwnership} changeOfOwnership
+ * @transaction
+ */
+function changeTitleOwnership(changeOfOwnership) {
+    changeOfOwnership.certificateOfTitle.owner = changeOfOwnership.buyer;
+    return getAssetRegistry('org.acme.mortgagebloc.CertificateOfTitle')
+        .then(function (assetRegistry) {
+            return assetRegistry.update(changeOfOwnership.certificateOfTitle);
         });
 }
